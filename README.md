@@ -66,7 +66,7 @@ open a browser.
 ## Install
 
 ```bash
-git clone https://github.com/YOUR_ACCOUNT/colab-drive-mcp.git
+git clone https://github.com/YummyTastyCode/colab-drive-mcp.git
 cd colab-drive-mcp
 python3 -m venv .venv
 .venv/bin/pip install -e '.[drive]'

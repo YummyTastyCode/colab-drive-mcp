@@ -23,6 +23,11 @@ dependencies = [
   "nbformat>=5.10,<6",
 ]
 
+[project.urls]
+Homepage = "https://github.com/YummyTastyCode/colab-drive-mcp"
+Repository = "https://github.com/YummyTastyCode/colab-drive-mcp"
+Issues = "https://github.com/YummyTastyCode/colab-drive-mcp/issues"
+
 [project.optional-dependencies]
 drive = [
   "google-api-python-client>=2.170,<3",
