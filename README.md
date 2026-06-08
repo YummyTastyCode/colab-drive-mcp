@@ -1,5 +1,9 @@
 # Colab Drive MCP
 
+[![CI](https://github.com/YummyTastyCode/colab-drive-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/YummyTastyCode/colab-drive-mcp/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/YummyTastyCode/colab-drive-mcp)](https://github.com/YummyTastyCode/colab-drive-mcp/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 An MCP server for safely inspecting, editing, and synchronizing
 Google Colab-compatible `.ipynb` notebooks through Google Drive.
 
