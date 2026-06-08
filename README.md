@@ -4,6 +4,7 @@
 
 [![CI](https://github.com/YummyTastyCode/colab-drive-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/YummyTastyCode/colab-drive-mcp/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/YummyTastyCode/colab-drive-mcp)](https://github.com/YummyTastyCode/colab-drive-mcp/releases)
+[![PyPI](https://img.shields.io/pypi/v/colab-drive-mcp)](https://pypi.org/project/colab-drive-mcp/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 An MCP server for safely inspecting, editing, and synchronizing
@@ -71,6 +72,14 @@ open a browser.
 
 ## Install
 
+Run directly from [PyPI](https://pypi.org/project/colab-drive-mcp/) with `uvx`:
+
+```bash
+COLAB_MCP_ROOT="$HOME/notebooks" uvx --from 'colab-drive-mcp[drive]' colab-drive-mcp
+```
+
+Or install from source:
+
 ```bash
 git clone https://github.com/YummyTastyCode/colab-drive-mcp.git
 cd colab-drive-mcp
@@ -85,6 +94,12 @@ COLAB_MCP_ROOT="$HOME/notebooks" .venv/bin/colab-drive-mcp
 ```
 
 Local tools can access only `.ipynb` files below `COLAB_MCP_ROOT`.
+
+The server is published in the official MCP Registry as:
+
+```text
+io.github.YummyTastyCode/colab-drive-mcp
+```
 
 ## Google Drive Setup
 

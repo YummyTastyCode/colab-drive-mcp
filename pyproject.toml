@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "colab-drive-mcp"
-version = "0.1.1"
+version = "0.1.2"
 description = "MCP server for synchronizing Colab notebook files through Google Drive; does not execute notebooks"
 readme = "README.md"
 requires-python = ">=3.11"
