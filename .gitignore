@@ -1,6 +1,9 @@
 .venv/
 .pytest_cache/
 .zero/
+build/
+dist/
+*.egg-info/
 __pycache__/
 *.pyc
 credentials.json

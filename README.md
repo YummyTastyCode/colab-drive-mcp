@@ -1,5 +1,7 @@
 # Colab Drive MCP
 
+<!-- mcp-name: io.github.YummyTastyCode/colab-drive-mcp -->
+
 [![CI](https://github.com/YummyTastyCode/colab-drive-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/YummyTastyCode/colab-drive-mcp/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/YummyTastyCode/colab-drive-mcp)](https://github.com/YummyTastyCode/colab-drive-mcp/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)

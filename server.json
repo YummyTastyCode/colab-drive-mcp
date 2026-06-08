@@ -1,0 +1,53 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.YummyTastyCode/colab-drive-mcp",
+  "title": "Colab Drive MCP",
+  "description": "Synchronize Colab notebook files through Google Drive without executing notebook code.",
+  "repository": {
+    "url": "https://github.com/YummyTastyCode/colab-drive-mcp",
+    "source": "github"
+  },
+  "version": "0.1.1",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "colab-drive-mcp",
+      "version": "0.1.1",
+      "runtimeHint": "uvx",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "COLAB_MCP_ROOT",
+          "description": "Absolute local directory that bounds notebook file access.",
+          "isRequired": true,
+          "isSecret": false,
+          "format": "string"
+        },
+        {
+          "name": "COLAB_MCP_DRIVE_ACCESS",
+          "description": "Google Drive access mode: file for minimal access or full for discovering existing notebooks.",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "string",
+          "default": "file"
+        },
+        {
+          "name": "COLAB_MCP_GOOGLE_CREDENTIALS",
+          "description": "Optional path to the local Google OAuth Desktop client JSON.",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "string"
+        },
+        {
+          "name": "COLAB_MCP_GOOGLE_TOKEN",
+          "description": "Optional path to the local Google OAuth token JSON.",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "string"
+        }
+      ]
+    }
+  ]
+}
