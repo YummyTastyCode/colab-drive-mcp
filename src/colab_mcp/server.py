@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import asyncio
+import hashlib
 import os
 from pathlib import Path
-from typing import Literal
+from typing import Callable, Literal
 
 import nbformat
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import Context, FastMCP
 
 from .drive import DriveNotebookClient
 from .notebooks import NotebookStore, normalize_colab_notebook
@@ -26,6 +28,9 @@ keeping sessions alive, or bypassing Colab limits. Use pull_drive_notebook and
 push_local_notebook only to synchronize files. get_colab_url only returns a
 URL; it does not open a browser. Ask before overwriting an existing Drive file.
 Use get_google_drive_status before suggesting authorization troubleshooting.
+Transfer tools report progress when the MCP client supplies a progress token.
+Drive metadata can show synchronization state, but cannot show whether a Colab
+runtime is currently executing the notebook.
 """.strip()
 mcp = FastMCP("colab-drive-sync", instructions=MCP_INSTRUCTIONS)
 
@@ -108,26 +113,80 @@ def list_drive_notebooks(query: str = "", limit: int = 100) -> list[dict]:
     return drive.list_notebooks(query, limit)
 
 
+def _thread_progress(ctx: Context, action: str) -> Callable[[float, str], None]:
+    loop = asyncio.get_running_loop()
+
+    def report(fraction: float, message: str) -> None:
+        asyncio.run_coroutine_threadsafe(
+            ctx.report_progress(fraction * 100, 100, message or action), loop
+        )
+
+    return report
+
+
 @mcp.tool()
-def pull_drive_notebook(file_id: str, local_path: str) -> dict:
+async def pull_drive_notebook(file_id: str, local_path: str, ctx: Context) -> dict:
     """Synchronize a Drive notebook file into COLAB_MCP_ROOT without executing it."""
-    raw_notebook = drive.download_notebook(file_id)
+    await ctx.report_progress(0, 100, "Starting Google Drive download")
+    raw_notebook = await asyncio.to_thread(
+        drive.download_notebook, file_id, _thread_progress(ctx, "Downloading notebook")
+    )
     normalized_outputs = normalize_colab_notebook(raw_notebook)
     notebook = nbformat.from_dict(raw_notebook)
     store.write(local_path, notebook)
     result = store.summary(local_path, include_source=False)
     result["normalized_outputs"] = normalized_outputs
+    await ctx.report_progress(100, 100, "Notebook downloaded")
     return result
 
 
 @mcp.tool()
-def push_local_notebook(
-    local_path: str, drive_name: str = "", file_id: str | None = None
+async def push_local_notebook(
+    local_path: str, ctx: Context, drive_name: str = "", file_id: str | None = None
 ) -> dict:
     """Synchronize a local notebook file to Drive without executing it."""
     notebook = store.read(local_path)
     name = drive_name or Path(local_path).name
-    return drive.upload_notebook(dict(notebook), name, file_id)
+    await ctx.report_progress(0, 100, "Starting Google Drive upload")
+    result = await asyncio.to_thread(
+        drive.upload_notebook,
+        dict(notebook),
+        name,
+        file_id,
+        _thread_progress(ctx, "Uploading notebook"),
+    )
+    await ctx.report_progress(100, 100, "Notebook uploaded")
+    return result
+
+
+@mcp.tool()
+def get_notebook_sync_status(file_id: str, local_path: str | None = None) -> dict:
+    """Compare Drive and local notebook state; cannot detect Colab runtime activity."""
+    remote = drive.get_notebook_metadata(file_id)
+    result = {
+        "file_id": file_id,
+        "drive": remote,
+        "sync_state": "remote_only" if local_path is None else "unknown",
+        "runtime_status": "unavailable",
+        "runtime_status_message": (
+            "Google Drive metadata does not expose whether a Colab runtime is "
+            "connected to or executing this notebook."
+        ),
+    }
+    if local_path is None:
+        return result
+    notebook = store.read(local_path)
+    local_content = drive.notebook_bytes(dict(notebook))
+    local_md5 = hashlib.md5(local_content).hexdigest()
+    remote_md5 = remote.get("md5Checksum")
+    result["local"] = {
+        "path": local_path,
+        "upload_size": len(local_content),
+        "upload_md5": local_md5,
+    }
+    if remote_md5:
+        result["sync_state"] = "in_sync" if remote_md5 == local_md5 else "differs"
+    return result
 
 
 @mcp.tool()

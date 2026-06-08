@@ -25,6 +25,8 @@ VS Code, or another notebook runtime.
 
 - Inspect and edit notebook cells without loading the entire notebook.
 - Create, search, copy, upload, and download notebooks.
+- Report live upload and download progress to MCP clients that request it.
+- Compare local and Drive notebook copies using Drive metadata and content MD5.
 - Keep local file access inside a configured root directory.
 - Normalize Colab-specific stream output metadata during downloads.
 - Diagnose Google Drive setup without unexpectedly opening a browser.
@@ -34,6 +36,7 @@ VS Code, or another notebook runtime.
 ## Non-goals
 
 - Starting, controlling, or monitoring a Google Colab runtime.
+- Detecting whether a Colab runtime is connected, busy, or executing a file.
 - Executing notebook cells locally or remotely.
 - Browser automation, automatic `Run all`, or unattended Colab sessions.
 - Circumventing Colab quotas, idle timeouts, access controls, or usage policies.
@@ -64,11 +67,18 @@ non-goals as a typed Zero language contract for agents and repository tooling.
 ### Google Drive
 
 - `list_drive_notebooks`, `pull_drive_notebook`, `push_local_notebook`
-- `copy_drive_notebook`, `get_colab_url`
+- `get_notebook_sync_status`, `copy_drive_notebook`, `get_colab_url`
 
 `pull_drive_notebook` and `push_local_notebook` synchronize notebook files.
-They never execute notebook code. `get_colab_url` returns a URL but does not
-open a browser.
+They send MCP progress notifications when the client supplies a progress token,
+but clients decide whether and how to display those notifications. They never
+execute notebook code. `get_colab_url` returns a URL but does not open a browser.
+
+`get_notebook_sync_status` compares the local notebook's upload representation
+with Drive's MD5 checksum and returns `in_sync`, `differs`, `remote_only`, or
+`unknown`. It also returns Drive metadata such as modification time and version.
+It cannot determine whether Colab is currently executing the notebook because
+Google Drive does not expose Colab runtime activity.
 
 ## Install
 

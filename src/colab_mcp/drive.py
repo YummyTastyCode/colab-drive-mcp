@@ -4,11 +4,13 @@ import io
 import json
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 DRIVE_FILE_SCOPE = "https://www.googleapis.com/auth/drive.file"
 DRIVE_FULL_SCOPE = "https://www.googleapis.com/auth/drive"
 NOTEBOOK_MIME = "application/x-ipynb+json"
+TRANSFER_CHUNK_SIZE = 1024 * 1024
+ProgressCallback = Callable[[float, str], None]
 
 
 class DriveUserError(RuntimeError):
@@ -251,42 +253,76 @@ class DriveNotebookClient:
         result = self._execute(request)
         return result.get("files", [])
 
-    def download_notebook(self, file_id: str) -> dict[str, Any]:
+    def get_notebook_metadata(self, file_id: str) -> dict[str, Any]:
+        request = self.service().files().get(
+            fileId=file_id,
+            fields="id,name,modifiedTime,size,md5Checksum,version,webViewLink",
+        )
+        return self._execute(request)
+
+    def download_notebook(
+        self, file_id: str, progress: ProgressCallback | None = None
+    ) -> dict[str, Any]:
         _, _, _, _, media = self._imports()
         MediaIoBaseDownload, _ = media
         buffer = io.BytesIO()
         downloader = MediaIoBaseDownload(
-            buffer, self.service().files().get_media(fileId=file_id)
+            buffer,
+            self.service().files().get_media(fileId=file_id),
+            chunksize=TRANSFER_CHUNK_SIZE,
         )
         done = False
         while not done:
             try:
-                _, done = downloader.next_chunk()
+                status, done = downloader.next_chunk()
+                if progress and status:
+                    progress(status.progress(), "Downloading notebook from Google Drive")
             except Exception as exc:
                 self._raise_api_error(exc)
         return json.loads(buffer.getvalue())
 
     def upload_notebook(
-        self, notebook: dict[str, Any], name: str, file_id: str | None = None
+        self,
+        notebook: dict[str, Any],
+        name: str,
+        file_id: str | None = None,
+        progress: ProgressCallback | None = None,
     ) -> dict[str, Any]:
         _, _, _, _, media = self._imports()
         _, MediaIoBaseUpload = media
-        content = json.dumps(notebook, ensure_ascii=False).encode()
-        upload = MediaIoBaseUpload(io.BytesIO(content), mimetype=NOTEBOOK_MIME, resumable=False)
-        fields = "id,name,modifiedTime,size,webViewLink"
+        content = self.notebook_bytes(notebook)
+        upload = MediaIoBaseUpload(
+            io.BytesIO(content),
+            mimetype=NOTEBOOK_MIME,
+            chunksize=TRANSFER_CHUNK_SIZE,
+            resumable=True,
+        )
+        fields = "id,name,modifiedTime,size,md5Checksum,version,webViewLink"
         if file_id:
             request = (
                 self.service()
                 .files()
                 .update(fileId=file_id, media_body=upload, fields=fields)
             )
-            return self._execute(request)
-        request = (
-            self.service()
-            .files()
-            .create(body={"name": name, "mimeType": NOTEBOOK_MIME}, media_body=upload, fields=fields)
-        )
-        return self._execute(request)
+        else:
+            request = (
+                self.service()
+                .files()
+                .create(
+                    body={"name": name, "mimeType": NOTEBOOK_MIME},
+                    media_body=upload,
+                    fields=fields,
+                )
+            )
+        response = None
+        while response is None:
+            try:
+                status, response = request.next_chunk()
+                if progress and status:
+                    progress(status.progress(), "Uploading notebook to Google Drive")
+            except Exception as exc:
+                self._raise_api_error(exc)
+        return response
 
     def copy_notebook(self, file_id: str, name: str) -> dict[str, Any]:
         request = (
@@ -295,6 +331,10 @@ class DriveNotebookClient:
             .copy(fileId=file_id, body={"name": name}, fields="id,name,modifiedTime,webViewLink")
         )
         return self._execute(request)
+
+    @staticmethod
+    def notebook_bytes(notebook: dict[str, Any]) -> bytes:
+        return json.dumps(notebook, ensure_ascii=False).encode()
 
     @staticmethod
     def colab_url(file_id: str) -> str:
