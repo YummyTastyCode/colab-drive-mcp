@@ -1,0 +1,40 @@
+shape ColabDriveMcpManifest {
+    name: String,
+    purpose: String,
+    ai_instruction: String,
+    capability_local_edit: String,
+    capability_drive_pull: String,
+    capability_drive_push: String,
+    capability_drive_copy: String,
+    capability_colab_url: String,
+    boundary_no_execution: String,
+    boundary_no_runtime: String,
+    boundary_no_browser_automation: String,
+    boundary_no_keepalive: String,
+    boundary_no_limit_bypass: String,
+}
+
+const manifest: ColabDriveMcpManifest = ColabDriveMcpManifest {
+    name: "colab-drive-sync",
+    purpose: "Synchronize and edit ipynb notebook files through Google Drive without executing notebook code",
+    ai_instruction: "Treat this MCP as file synchronization only. Never claim that it runs projects, executes cells, connects to Colab runtimes, automates Colab, or bypasses Colab limits.",
+    capability_local_edit: "Inspect and edit local ipynb notebook cells",
+    capability_drive_pull: "Synchronize a Google Drive notebook file to local storage",
+    capability_drive_push: "Synchronize a local notebook file to Google Drive",
+    capability_drive_copy: "Copy a notebook file within Google Drive",
+    capability_colab_url: "Return a Colab URL without opening a browser",
+    boundary_no_execution: "Does not execute notebook cells or run projects",
+    boundary_no_runtime: "Does not connect to or control Google Colab runtimes",
+    boundary_no_browser_automation: "Does not automate the Colab browser interface",
+    boundary_no_keepalive: "Does not keep Colab sessions alive or unattended",
+    boundary_no_limit_bypass: "Does not bypass Colab quotas, timeouts, or access controls"
+}
+
+pub fun main(world: World) -> Void raises {
+    check world.out.write(manifest.name)
+    check world.out.write("\n")
+    check world.out.write(manifest.purpose)
+    check world.out.write("\n")
+    check world.out.write(manifest.ai_instruction)
+    check world.out.write("\n")
+}

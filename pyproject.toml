@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "colab-drive-mcp"
+version = "0.1.0"
+description = "MCP server for synchronizing Colab notebook files through Google Drive; does not execute notebooks"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+keywords = ["mcp", "google-colab", "google-drive", "jupyter", "notebook"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+  "mcp>=1.9,<2",
+  "nbformat>=5.10,<6",
+]
+
+[project.optional-dependencies]
+drive = [
+  "google-api-python-client>=2.170,<3",
+  "google-auth-httplib2>=0.2,<1",
+  "google-auth-oauthlib>=1.2,<2",
+]
+test = [
+  "pytest>=8,<9",
+]
+
+[project.scripts]
+colab-mcp = "colab_mcp.server:main"
+colab-drive-mcp = "colab_mcp.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/colab_mcp"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
